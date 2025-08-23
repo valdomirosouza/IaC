@@ -1,0 +1,12 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+crash.log
+
+# Arquivos de chave
+*.pem
+
+# Arquivos temporários e de log
+*.log
