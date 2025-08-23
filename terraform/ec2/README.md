@@ -22,7 +22,7 @@ terraform destroy -var-file="dev.tfvars" -auto-approve
 
 ### Acesso ao Servidor
 
-Para acessar a instância EC2 via SSH, utilize o seu par de chaves e o endereço IP público do servidor.
+Para acessar a instância EC2 via SSH, utilize a sua chaves SSH e o endereço IP privado ou público do servidor.
 
 ```bash
 ssh -i ~/.ssh/[nome da chave].pem [USER]@[X.Y.Z.W]
