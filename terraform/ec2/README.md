@@ -9,13 +9,13 @@ Este projeto utiliza Terraform para provisionar e gerenciar uma instância EC2 n
 Para provisionar o servidor e todos os recursos necessários, execute o comando abaixo. Ele usará o plano de execução e o aprovará automaticamente.
 
 ```bash
-terraform apply -auto-approve
+terraform apply -var-file="dev.tfvars" -auto-approve
 ````
 
 Para destruir todos os recursos gerenciados por este projeto, use o seguinte comando. Ele também aprovará a operação de forma automática.
 
 ```bash
-terraform destroy -auto-approve
+terraform destroy -var-file="dev.tfvars" -auto-approve
 ```
 
 -----
