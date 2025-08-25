@@ -7,44 +7,15 @@
 sudo yum update -y
 
 ## --------------------------------------
-## Proteger SSH
+# Proteger SSH
 ## --------------------------------------
-# Aplica as configurações de hardening
 echo "Protegendo o acesso SSH..."
-sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/g' /etc/ssh/sshd_config
 sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
-sudo sed -i 's/^#*AllowTcpForwarding.*/AllowTcpForwarding no/' /etc/ssh/sshd_config
-sudo sed -i 's/^#*MaxAuthTries.*/MaxAuthTries 3/' /etc/ssh/sshd_config
-sudo sed -i 's/^#*X11Forwarding.*/X11Forwarding no/' /etc/ssh/sshd_config
-sudo sed -i 's/^#*AllowAgentForwarding.*/AllowAgentForwarding no/' /etc/ssh/sshd_config
-sudo sed -i 's/^#*Compression.*/Compression no/' /etc/ssh/sshd_config
-sudo sed -i 's/^#*TCPKeepAlive.*/TCPKeepAlive no/' /etc/ssh/sshd_config
-
-sudo systemctl restart sshd
+systemctl restart sshd
 
 ## --------------------------------------
-## Define uma lista de serviços
-## para desabilitar
-## --------------------------------------
-DISABLE_LIST=(
-    acpid.service
-    getty@tty1.service
-    serial-getty@ttyS0.service
-    irqbalance.service
-    systemd-homed.service
-    systemd-homed-activate.service
-)
-
-    echo "Desativando serviços desnecessários..."
-    for service in "${DISABLE_LIST[@]}"; do
-        echo "Desativando e parando o serviço: $service"
-        sudo systemctl disable --now "$service" || true
-    done
-
-## --------------------------------------
-## Aplicar configurações de segurança
-## do kernel
+# Aplicar configurações de segurança do kernel
 ## --------------------------------------
 echo "Aplicando configurações do kernel..."
 echo "net.ipv4.conf.all.rp_filter = 1" | sudo tee -a /etc/sysctl.conf
@@ -78,16 +49,16 @@ fi
 # Essenciais comuns e utilitários de troubleshooting
 ALLOWLIST_COMMON=(
   bash coreutils findutils grep gawk sed tar gzip bzip2 xz diffutils less which
-  procps-ng util-linux shadow-utils passwd sudo libsss_sudo man-db lsof
-  iproute iputils curl ca-certificates openssl libpcap tcpdump man-pages
-  bind-libs bind-license bind-utils binutils irqbalance rootfiles 
+  procps-ng util-linux shadow-utils passwd sudo yum
+  iproute iputils curl ca-certificates openssl
+  bash-completion bind-libs bind-license bind-utils binutils
   chkconfig crontabs dnf-plugin-release-notification dnf-plugin-support-info dnf-utils 
 )
 
 # Pacotes vitais e de operação para AL2023
 ALLOWLIST_AMAZON2023=(
   # Kernel e libs fundamentais
-  kernel kernel-core kernel-modules kernel6.* glibc libgcc libstdc++ filesystem setup tzdata
+  kernel kernel-core kernel-modules glibc libgcc libstdc++ filesystem setup tzdata
 
   # Amazon Linux
   amazon-chrony-config amazon-ec2-net-utils amazon-linux-sb-keys amazon-rpm-config
@@ -200,23 +171,6 @@ fi
 
 # Umask mais restritiva (novo login)
 echo 'umask 027' >/etc/profile.d/99-hardening-umask.sh
-
-# ----------------------------------------------------
-# HARDENING - Removendo os Candidatos para exclusão
-# ----------------------------------------------------
-ARQUIVO="/root/hardening/purge-candidates.txt"
-
-# Usa sudo para verificar se o arquivo NÃO está vazio
-# O comando 'stat -c "%s"' retorna o tamanho do arquivo em bytes.
-# A opção '>/dev/null 2>&1' direciona a saída para o "nada" (/dev/null),
-# evitando a exibição de erros se o arquivo não existir ou não puder ser acessado.
-if sudo stat -c "%s" "$ARQUIVO" >/dev/null 2>&1 && [ $(sudo stat -c "%s" "$ARQUIVO") -gt 0 ]; then
-  echo "O arquivo '$ARQUIVO' existe e não está vazio."
-  sudo su -c 'cat /root/hardening/purge-candidates.txt' | awk '{ print "dnf remove -y --skip-broken "$1 }' > /tmp/purge-candidates.sh
-  sudo su -c '/bin/bash /tmp/purge-candidates.sh'
-else
-  echo "O arquivo '$ARQUIVO' não existe, está vazio ou houve um erro de permissão."
-fi
 
 echo "$(date -Is) - Hardening done" | tee -a "$LOG"
 
